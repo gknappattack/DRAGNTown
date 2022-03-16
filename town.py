@@ -1,3 +1,4 @@
+from curses import KEY_ENTER
 import pygame, time
 import numpy as np
 from pygame.locals import *
@@ -13,8 +14,129 @@ file3 = './Assets/Pixel Art Top Down - Basic/Texture/TX Tileset Wall.png'
 import pygame,sys
 from pygame.locals import *
 
-def sprite_sheet(size,file,pos=(0,0)):
+class TextRectException:
+    def __init__(self, message=None):
+            self.message = message
 
+    def __str__(self):
+        return self.message
+
+
+def multiLineSurface(string: str, font: pygame.font.Font, rect: pygame.rect.Rect, fontColour: tuple, BGColour: tuple, justification=0):
+    """Returns a surface containing the passed text string, reformatted
+    to fit within the given rect, word-wrapping as necessary. The text
+    will be anti-aliased.
+
+    Parameters
+    ----------
+    string - the text you wish to render. \n begins a new line.
+    font - a Font object
+    rect - a rect style giving the size of the surface requested.
+    fontColour - a three-byte tuple of the rgb value of the
+             text color. ex (0, 0, 0) = BLACK
+    BGColour - a three-byte tuple of the rgb value of the surface.
+    justification - 0 (default) left-justified
+                1 horizontally centered
+                2 right-justified
+
+    Returns
+    -------
+    Success - a surface object with the text rendered onto it.
+    Failure - raises a TextRectException if the text won't fit onto the surface.
+    """
+
+    finalLines = []
+    requestedLines = string.splitlines()
+    # Create a series of lines that will fit on the provided
+    # rectangle.
+    for requestedLine in requestedLines:
+        if font.size(requestedLine)[0] > rect.width:
+            words = requestedLine.split(' ')
+            # if any of our words are too long to fit, return.
+            for word in words:
+                if font.size(word)[0] >= rect.width:
+                    raise TextRectException("The word " + word + " is too long to fit in the rect passed.")
+            # Start a new line
+            accumulatedLine = ""
+            for word in words:
+                testLine = accumulatedLine + word + " "
+                # Build the line while the words fit.
+                if font.size(testLine)[0] < rect.width:
+                    accumulatedLine = testLine
+                else:
+                    finalLines.append(accumulatedLine)
+                    accumulatedLine = word + " "
+            finalLines.append(accumulatedLine)
+        else:
+            finalLines.append(requestedLine)
+
+    # Let's try to write the text out on the surface.
+    surface = pygame.Surface(rect.size)
+    surface.fill(BGColour)
+    accumulatedHeight = 0
+    for line in finalLines:
+        if accumulatedHeight + font.size(line)[1] >= rect.height:
+             raise TextRectException("Once word-wrapped, the text string was too tall to fit in the rect.")
+        if line != "":
+            tempSurface = font.render(line, 1, fontColour)
+        if justification == 0:
+            surface.blit(tempSurface, (0, accumulatedHeight))
+        elif justification == 1:
+            surface.blit(tempSurface, ((rect.width - tempSurface.get_width()) / 2, accumulatedHeight))
+        elif justification == 2:
+            surface.blit(tempSurface, (rect.width - tempSurface.get_width(), accumulatedHeight))
+        else:
+            raise TextRectException("Invalid justification argument: " + str(justification))
+        accumulatedHeight += font.size(line)[1]
+    return surface
+
+
+class TextBox:
+    def __init__(self, screen, height, width, pos=(0,0)):
+        self.screen = screen
+        self.height = height  #100
+        self.width = width #480
+        self.pos_x = pos[0] #260
+        self.pos_y = pos[1] #505
+        self.text = ""
+        self.font = pygame.font.SysFont('Arial', 20)
+        self.text_color = (0,0,0)
+        #self.text_input = TextBox(self.screen, 30, self.width, (self.pos_x,self.pos_y + 5))
+
+    def draw(self):
+        color = (50,50,50)
+        #if self.active:
+        #    color = (150, 150, 150)
+        #else:
+        #    color = (50, 50, 50)
+        pygame.draw.rect(self.screen, color, pygame.Rect(self.pos_x, self.pos_y, self.width, self.height))
+        #self.screen.blit(self.font.render(self.text, True, self.text_color), (self.pos_x + 2, self.pos_y))
+        self.screen.blit(multiLineSurface(self.text, self.font, pygame.Rect(self.pos_x, self.pos_y, self.width, self.height), (0,0,0), (100,100,100)), (self.pos_x + 2, self.pos_y))
+        
+    def updateText(self, input):
+        self.text += input
+        #if len(self.text)*20 % self.width - 3  < 1:
+        #self.text += '\n'
+        
+class TextInput(TextBox):
+    def __init__(self, screen, height, width, pos=(0,0)):
+        TextBox.__init__(self, screen, height, width, pos)
+        self.active = False
+        self.isCaps = False
+    def draw(self, ):
+        color = (0,0,0)
+        if self.active:
+            color = (0, 255, 0)
+            if self.isCaps:
+                color = (0, 125, 70)
+        else:
+            color = (255, 0, 0)
+        pygame.draw.rect(self.screen, color, pygame.Rect(self.pos_x, self.pos_y, self.width, self.height))
+        self.screen.blit(multiLineSurface(self.text, self.font, pygame.Rect(self.pos_x, self.pos_y, self.width, self.height), (0,0,0), color), (self.pos_x + 2, self.pos_y))
+    def updateText(self, input):
+        self.text += input
+
+def sprite_sheet(size,file,pos=(0,0)):
     #Initial Values
     len_sprt_x,len_sprt_y = size #sprite size
     sprt_rect_x,sprt_rect_y = pos #where to find first sprite on sheet
@@ -45,7 +167,7 @@ def sprite_sheet(size,file,pos=(0,0)):
     #2.0 - fully functional sprite sheet loader
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, appearance, isPlayer, customPos, cPx=0, cPy=0):
+    def __init__(self, appearance, isPlayer, customPos, screen, cPx=0, cPy=0):
         pygame.sprite.Sprite.__init__(self)
         #self.image = pygame.Surface((32, 32))
         #self.image.fill((255,0,0))
@@ -53,6 +175,7 @@ class Player(pygame.sprite.Sprite):
         #self.tileset = Tileset(appearance)
         #self.appearance = self.tileset.tiles[0]
         #self.image.blit(self.appearance, (32, 32))
+        self.screen = screen
         self.isPlayer = isPlayer
         self.sheet = sprite_sheet((32,32), appearance)
         print(self.sheet)
@@ -71,6 +194,12 @@ class Player(pygame.sprite.Sprite):
             self.rect.center = (cPx, cPy)
         else:
             self.rect.center = (WIDTH / 2, HEIGHT / 2)
+    
+    def talk(self, message):
+        pygame.draw.rect(self.screen, (255,255,255), pygame.Rect(self.rect.topright[0], self.rect.topright[1], 60, 20))
+        self.screen.blit(multiLineSurface(message, pygame.font.SysFont('Arial', 10), pygame.Rect(self.rect.topright[0], self.rect.topright[1], 60, 20), (0,0,0), (255,255,255)), (self.rect.topright[0]+2, self.rect.topright[1]))
+
+
     
     def walk(self, sprite_vals):
         if self.move_state == 0:
@@ -204,20 +333,30 @@ class Game:
     def __init__(self):
         pygame.init()
         self.screen = pygame.display.set_mode(Game.SIZE)
+
         pygame.display.set_caption("Pygame Tiled Demo")
         self.all_sprites = pygame.sprite.Group()
-        player = Player('./Assets/characters/PIPOYA FREE RPG Character Sprites 32x32/Male/Male 01-1.png', True, False)
-        villiager1 = Player('./Assets/characters/PIPOYA FREE RPG Character Sprites 32x32/Male/Male 02-2.png', False, True, 200, 400)
-        villiager2 = Player('./Assets/characters/PIPOYA FREE RPG Character Sprites 32x32/Female/Female 01-1.png', False, True, 232, 400)
-        villiager3 = Player('./Assets/characters/PIPOYA FREE RPG Character Sprites 32x32/Male/Male 03-1.png', False, True, 264, 400)
-        villiager4 = Player('./Assets/characters/PIPOYA FREE RPG Character Sprites 32x32/Male/Male 05-3.png', False, True, 296, 400)
-
+        player = Player('./Assets/characters/PIPOYA FREE RPG Character Sprites 32x32/Male/Male 01-1.png', True, False, self.screen)
+        villiager1 = Player('./Assets/characters/PIPOYA FREE RPG Character Sprites 32x32/Male/Male 02-2.png', False, True, self.screen, 200, 400)
+        villiager2 = Player('./Assets/characters/PIPOYA FREE RPG Character Sprites 32x32/Female/Female 01-1.png', False, True, self.screen, 232, 400)
+        villiager3 = Player('./Assets/characters/PIPOYA FREE RPG Character Sprites 32x32/Male/Male 03-1.png', False, True, self.screen, 264, 400)
+        villiager4 = Player('./Assets/characters/PIPOYA FREE RPG Character Sprites 32x32/Male/Male 05-3.png', False, True, self.screen, 296, 400)
 
         self.all_sprites.add(player)
         self.all_sprites.add(villiager1)
         self.all_sprites.add(villiager2)
         self.all_sprites.add(villiager3)
         self.all_sprites.add(villiager4)
+
+        # ------------ CHAT FUNCTIONALITY ----------------
+        self.text_box = TextBox(self.screen, 150,760, (0,480))
+        self.input_box = TextInput(self.screen, 30, 760, (0, 605))
+        self.isCAPS = False
+        self.displayChatCnt = 0
+        self.chatBeingDisplayed = False
+        self.displayChatTxt = ""
+        # ------------------------------------------------
+
         oobList = [(self.all_sprites.sprites()[1].rect.x, self.all_sprites.sprites()[1].rect.y)]
         print("oobList: ", oobList)
         player.setOOB(oobList)
@@ -395,10 +534,12 @@ class Game:
         pygame.display.update()
 
     def update_ui(self, event):
-        self.input_rect = pygame.Rect(600, 650, 350, 170)
+        #self.input_rect = pygame.Rect(600, 650, 350, 170)
+        self.text_box.draw()
+        self.input_box.draw()
         #color_active = pygame.Color("lightskyblue")
-        color_active = pygame.Color("gray15")
-        color_passive = pygame.Color("black")
+        #color_active = pygame.Color("gray15")
+        #color_passive = pygame.Color("black")
         #color_passive = pygame.Color("gray15")
         #color = color_passive
         if event != None:
@@ -415,16 +556,11 @@ class Game:
                 else:
                     self.user_text += event.unicode
         
-        if self.text_active:
-            color = color_active
-        else:
-            color = color_passive
+        #pygame.draw.rect(self.screen, color, self.input_rect)
         
-        pygame.draw.rect(self.screen, color, self.input_rect)
-
-        text_surface = self.base_font.render(self.user_text, True, (255, 255, 255))
-        self.screen.blit(text_surface, (self.input_rect.x + 5, self.input_rect.y + 5))
-        self.input_rect.w = max(100, text_surface.get_width() + 10)
+        #text_surface = self.base_font.render(self.user_text, True, (255, 255, 255))
+        #self.screen.blit(text_surface, (self.input_rect.x + 5, self.input_rect.y + 5))
+        #self.input_rect.w = max(100, text_surface.get_width() + 10)
         pygame.display.flip()
 
     def run(self):
@@ -437,22 +573,73 @@ class Game:
                 if event.type == QUIT:
                     self.running = False
                 elif event.type == KEYDOWN:
-                    if event.key == K_l:
-                        self.update_map()
-                    elif event.key == K_RIGHT:
-                        right_pressed = True
-                    elif event.key == K_LEFT:
-                        left_pressed = True
-                    elif event.key == K_UP:
-                        up_pressed = True
-                    elif event.key == K_DOWN:
-                        down_pressed = True
-                    elif event.key == K_ESCAPE:
-                        self.text_active = False
-                    elif event.key == K_RETURN:
-                        self.update_ui(event)
-                    elif self.text_active:
-                        self.update_ui(event)
+                    if self.input_box.active == False:
+                        if event.key == K_l:
+                            self.update_map()
+                        elif event.key == K_RIGHT:
+                            right_pressed = True
+                        elif event.key == K_LEFT:
+                            left_pressed = True
+                        elif event.key == K_UP:
+                            up_pressed = True
+                        elif event.key == K_DOWN:
+                            down_pressed = True
+                        elif event.key == K_ESCAPE:
+                            self.input_box.active = False
+                        elif event.key == K_RETURN:
+                            self.input_box.active = True
+                    else:
+                        if event.key == K_LSHIFT:
+                            self.isCAPS = not self.isCAPS
+                            self.input_box.isCaps = not self.input_box.isCaps
+                        if event.key == K_ESCAPE:
+                            self.input_box.active = False
+                        if event.key == K_BACKSPACE and len(self.input_box.text) > 0:
+                            self.input_box.text = self.input_box.text[:len(self.input_box.text)-1]
+                        if event.key == K_RETURN:
+                            self.chatBeingDisplayed = True
+                            self.text_box.text += self.input_box.text + '\n'
+                            self.displayChatTxt = self.input_box.text
+                            self.input_box.text = ""
+
+                        if event.key != K_BACKSPACE and event.key != K_ESCAPE and event.key != K_RETURN and event.key != K_LSHIFT:
+                            if self.isCAPS:
+                                print(event.key)
+                                if (chr(event.key).isalpha()):
+                                    self.input_box.updateText(chr(event.key - 32))
+                                elif (chr(event.key) == '/'):
+                                    self.input_box.updateText('?')
+                                elif (chr(event.key) == ';'):
+                                    self.input_box.updateText(':')
+                                elif (chr(event.key) == '\''):
+                                    self.input_box.updateText('\"')
+                                elif (chr(event.key).isdigit()):
+                                    if (chr(event.key == '1')):
+                                        self.input_box.updateText('!')
+                                    elif (chr(event.key == '2')):
+                                        self.input_box.updateText('@')
+                                    elif (chr(event.key == '3')):
+                                        self.input_box.updateText('#')
+                                    elif (chr(event.key == '4')):
+                                        self.input_box.updateText('$')
+                                    elif (chr(event.key == '5')):
+                                        self.input_box.updateText('%')
+                                    elif (chr(event.key == '6')):
+                                        self.input_box.updateText('^')
+                                    elif (chr(event.key == '7')):
+                                        self.input_box.updateText('&')
+                                    elif (chr(event.key == '8')):
+                                        self.input_box.updateText('*')
+                                    elif (chr(event.key == '9')):
+                                        self.input_box.updateText('(')
+                                    elif (chr(event.key == '0')):
+                                        self.input_box.updateText(')')
+                                    elif (chr(event.key == ',')):
+                                        self.input_box.updateText('<')
+                                    elif (chr(event.key == ',')):
+                                        self.input_box.updateText('>')
+                            else:
+                                self.input_box.updateText(chr(event.key))
                 
                 elif event.type == KEYUP:
                     if event.key == K_RIGHT:
@@ -464,10 +651,11 @@ class Game:
                     if event.key == K_DOWN:
                         down_pressed = False
 
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    self.update_ui(event)
-                    if self.input_rect.collidepoint(event.pos):
-                        self.text_active = True
+                #if event.type == pygame.MOUSEBUTTONDOWN:
+                #    self.update_ui(event)
+                #    if self.input_rect.collidepoint(event.pos):
+                #        self.text_active = True
+                    
 
             if right_pressed:
                 print(self.all_sprites.sprites())
@@ -493,6 +681,16 @@ class Game:
                 self.update_map()
                 self.update_ui(None)
             self.update_ui(None)
+            
+            if self.chatBeingDisplayed:
+                self.displayChatCnt += 1
+                self.all_sprites.sprites()[0].talk(self.displayChatTxt)
+            
+            if self.displayChatCnt == 40:
+                self.displayChatCnt = 0
+                self.chatBeingDisplayed = False
+
+
             self.clock.tick(20)       
         pygame.quit()
 
