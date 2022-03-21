@@ -41,7 +41,7 @@ class Game:
         pygame.init()
         self.screen = pygame.display.set_mode(Game.SIZE)
 
-        pygame.display.set_caption("Pygame Tiled Demo")
+        pygame.display.set_caption("DRAGN Town")
         self.all_sprites = pygame.sprite.Group()
         player = Player('./Assets/characters/PIPOYA FREE RPG Character Sprites 32x32/Male/Male 01-1.png', True, False, self.screen)
         villiager1 = Player('./Assets/characters/PIPOYA FREE RPG Character Sprites 32x32/Male/Male 02-2.png', False, True, self.screen, 200, 400)
@@ -65,9 +65,11 @@ class Game:
         self.talking_character_pos = None
         # ------------------------------------------------
 
+        # -------------------- TESTING OUT OF BOUNDS (NON FUNCTIONAL) ----------------------
         oobList = [(self.all_sprites.sprites()[1].rect.x, self.all_sprites.sprites()[1].rect.y)]
         print("oobList: ", oobList)
         player.setOOB(oobList)
+        # ----------------------------------------------------------------------------------
 
         self.running = True
         self.clock = pygame.time.Clock()
@@ -214,34 +216,24 @@ class Game:
         self.input_box.draw()
         pygame.display.update()
 
+    # THIS FUNCTION COULD BE DISSOLVED INTO SOMETHING ELSE? USED ONLY FOR TEXT?
     def update_ui(self, event):
-        #self.input_rect = pygame.Rect(600, 650, 350, 170)
         self.text_box.draw()
         self.input_box.draw()
-        #color_active = pygame.Color("lightskyblue")
-        #color_active = pygame.Color("gray15")
-        #color_passive = pygame.Color("black")
-        #color_passive = pygame.Color("gray15")
-        #color = color_passive
-        if event != None:
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if self.input_rect.collidepoint(event.pos):
-                    self.text_active = True
-            print(event)
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_BACKSPACE:
-                    # stores text except last letter
-                    self.user_text = self.user_text[0:-1]
-                elif event.key == pygame.K_RETURN:
-                    self.text_active = not self.text_active
-                else:
-                    self.user_text += event.unicode
-        
-        #pygame.draw.rect(self.screen, color, self.input_rect)
-        
-        #text_surface = self.base_font.render(self.user_text, True, (255, 255, 255))
-        #self.screen.blit(text_surface, (self.input_rect.x + 5, self.input_rect.y + 5))
-        #self.input_rect.w = max(100, text_surface.get_width() + 10)
+        #if event != None:
+        #    if event.type == pygame.MOUSEBUTTONDOWN:
+        #        if self.input_rect.collidepoint(event.pos):
+        #            self.text_active = True
+        #    print(event)
+        #    if event.type == pygame.KEYDOWN:
+        #        if event.key == pygame.K_BACKSPACE:
+        #            # stores text except last letter | aka removes last letter
+        #            self.user_text = self.user_text[0:-1]
+        #        elif event.key == pygame.K_RETURN:
+        #            self.text_active = not self.text_active
+        #        else:
+        #            self.user_text += event.unicode
+
         pygame.display.flip()
 
     def run(self):
@@ -345,12 +337,6 @@ class Game:
                     if event.key == K_DOWN:
                         down_pressed = False
 
-                #if event.type == pygame.MOUSEBUTTONDOWN:
-                #    self.update_ui(event)
-                #    if self.input_rect.collidepoint(event.pos):
-                #        self.text_active = True
-                    
-
             if right_pressed:
                 print(self.all_sprites.sprites())
                 self.all_sprites.sprites()[0].update('r')
@@ -375,7 +361,6 @@ class Game:
                 self.update_map()
                 self.update_ui(None) 
                 
-            
             if self.chatBeingDisplayed:
                 self.displayChatCnt += 1
             
@@ -384,7 +369,7 @@ class Game:
                 self.chatBeingDisplayed = False
 
             self.clock.tick(20)  
-            self.update_ui(None)     
+            self.update_ui(None)    
         pygame.quit()
 
     def load_image(self, file):
