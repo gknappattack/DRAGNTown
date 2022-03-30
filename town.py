@@ -2,6 +2,7 @@
 import pygame,sys,time
 import numpy as np
 from pygame.locals import *
+from helpers.character_asset_holder import CharacterAssetHolder
 
 from helpers.player import Player
 from helpers.sprite_sheet import sprite_sheet
@@ -22,6 +23,7 @@ class Game:
     #W = 960 # normally 640
     #H = 840 # normally 240
     SIZE = WIDTH, HEIGHT
+    CHAR_ASST_IDX = 0
     # SET A CLOCK
     
     def check_if_player_by_characters(self):
@@ -43,11 +45,11 @@ class Game:
 
         pygame.display.set_caption("DRAGN Town")
         self.all_sprites = pygame.sprite.Group()
-        player = Player('./Assets/characters/PIPOYA FREE RPG Character Sprites 32x32/Male/Male 01-1.png', True, False, self.screen)
-        villiager1 = Player('./Assets/characters/PIPOYA FREE RPG Character Sprites 32x32/Male/Male 02-2.png', False, True, self.screen, 200, 400)
-        villiager2 = Player('./Assets/characters/PIPOYA FREE RPG Character Sprites 32x32/Female/Female 01-1.png', False, True, self.screen, 232, 400)
-        villiager3 = Player('./Assets/characters/PIPOYA FREE RPG Character Sprites 32x32/Male/Male 03-1.png', False, True, self.screen, 264, 400)
-        villiager4 = Player('./Assets/characters/PIPOYA FREE RPG Character Sprites 32x32/Male/Male 05-3.png', False, True, self.screen, 296, 400)
+        player = Player(CharacterAssetHolder().getSprite(self.CHAR_ASST_IDX), True, False, self.screen)
+        villiager1 = Player(CharacterAssetHolder().getSprite(50), False, True, self.screen, cPx=200, cPy=400)
+        villiager2 = Player(CharacterAssetHolder().getSprite(23), False, True, self.screen, 232, 400)
+        villiager3 = Player(CharacterAssetHolder().getSprite(35), False, True, self.screen, 264, 400)
+        villiager4 = Player(CharacterAssetHolder().getSprite(46), False, True, self.screen, 296, 400)
 
         self.all_sprites.add(player)
         self.all_sprites.add(villiager1)
@@ -84,21 +86,14 @@ class Game:
         #structures = sprite_sheet((32, 32), file2)
         tileset2 = Tileset(file2)
         tileset3 = Tileset(file3)
-        #tilemap2 = Tilemap(tileset2)
-        #tilemap.set_random() # works
-        #---------------------------- For other map .png
+
         ROAD = 12
         WHT_CTR_FLWR = 33
         YLW_CTR_FLWR = 34
         WHT_CTR_SCTR = 35
         WHT_SCTR = 42
         YLW_SCTR = 43
-        
-        #RD_LFT_TRE_ML = 35
-        #RD_LFT_TRE_BL = 36
-        #RD_RL_TRE_TL = 37
-        #RD_LFT = 38
-        #RD_LFT = 39
+
         custommap = np.array([[ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD],\
         [ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD],\
         [ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD,ROAD],\
@@ -220,19 +215,6 @@ class Game:
     def update_ui(self, event):
         self.text_box.draw()
         self.input_box.draw()
-        #if event != None:
-        #    if event.type == pygame.MOUSEBUTTONDOWN:
-        #        if self.input_rect.collidepoint(event.pos):
-        #            self.text_active = True
-        #    print(event)
-        #    if event.type == pygame.KEYDOWN:
-        #        if event.key == pygame.K_BACKSPACE:
-        #            # stores text except last letter | aka removes last letter
-        #            self.user_text = self.user_text[0:-1]
-        #        elif event.key == pygame.K_RETURN:
-        #            self.text_active = not self.text_active
-        #        else:
-        #            self.user_text += event.unicode
 
         pygame.display.flip()
 
@@ -266,6 +248,30 @@ class Game:
                         elif event.key == K_e and self.talking_character_pos != None:
                             self.input_box.active = True
                             self.input_box.text = "Plr->{x}:".format(x=self.talking_character_pos)
+                        
+                        # FOR DISPLAYING HELP
+                        elif event.key == K_h:
+                            self.text_box.updateText("HELP: Change character skin: ,<left> .<right> *move after  |  Scroll Console Text: [<up> ]<down>")
+
+                        # FOR CHANGING CHARACTER
+                        elif event.key == K_COMMA:
+                            self.CHAR_ASST_IDX -= 1
+                            self.all_sprites.sprites()[0].change_sprite(CharacterAssetHolder().getSprite(self.CHAR_ASST_IDX))
+                            self.update_map()
+                            self.update_ui(None)
+                            self.clock.tick(20) 
+                        elif event.key == K_PERIOD:
+                            self.CHAR_ASST_IDX += 1
+                            self.all_sprites.sprites()[0].change_sprite(CharacterAssetHolder().getSprite(self.CHAR_ASST_IDX))
+                            self.update_map()
+                            self.update_ui(None)
+                            self.clock.tick(20) 
+                        # FOR ALTERING DISPLAY PAGE
+                        elif event.key == K_LEFTBRACKET:
+                            self.text_box.decrease_page()
+                        elif event.key == K_RIGHTBRACKET:
+                            self.text_box.increase_page()
+
                     else:
                         if event.key == K_LSHIFT:
                             self.isCAPS = not self.isCAPS

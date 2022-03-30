@@ -98,7 +98,13 @@ class TextBox:
         #    color = (50, 50, 50)
         pygame.draw.rect(self.screen, color, pygame.Rect(self.pos_x, self.pos_y, self.width, self.height))
         #self.screen.blit(self.font.render(self.text, True, self.text_color), (self.pos_x + 2, self.pos_y))
-        self.screen.blit(multiLineSurface(self.formatText(), self.font, pygame.Rect(self.pos_x, self.pos_y, self.width, self.height), (0,0,0), (100,100,100)), (self.pos_x + 2, self.pos_y))
+        try:
+            self.screen.blit(multiLineSurface(self.formatText(), self.font, pygame.Rect(self.pos_x, self.pos_y, self.width, self.height), (0,0,0), (100,100,100)), (self.pos_x + 2, self.pos_y))
+        except:
+            self.decrease_page()
+            self.screen.blit(multiLineSurface(self.formatText(), self.font, pygame.Rect(self.pos_x, self.pos_y, self.width, self.height), (0,0,0), (100,100,100)), (self.pos_x + 2, self.pos_y))
+
+
         
     def formatText(self):
         display_text = ""
@@ -106,13 +112,21 @@ class TextBox:
             display_text += self.text[i] + "\n"
         return display_text
 
+    def decrease_page(self):
+        if self.page != 0:
+            self.page -= 1
+
+    
+    def increase_page(self):
+        self.page += 1
+
     def updateText(self, input):
         print(self.text)
         self.text.append(input)
         self.page_end += 1
         if self.page_end % 6 == 0:
-            self.page += 4
-            self.page_end = 2
+            self.page += 2
+            self.page_end = 4
         #if len(self.text)*20 % self.width - 3  < 1:
         #self.text += '\n'
         

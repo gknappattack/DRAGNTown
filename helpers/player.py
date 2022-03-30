@@ -1,5 +1,6 @@
 import pygame
 import numpy as np
+from helpers.server_communicator import ServerCommunicator
 from helpers.sprite_sheet import sprite_sheet
 from helpers.texttools import multiLineSurface
 WIDTH = 760
@@ -28,6 +29,9 @@ class Player(pygame.sprite.Sprite):
         else:
             self.rect.center = (WIDTH / 2, HEIGHT / 2)
     
+    def change_sprite(self, appearance):
+        self.sheet = sprite_sheet((32,32), appearance)
+    
     def check_contact(self, input_character_rect_points):
         input_character_rect_points = np.array(input_character_rect_points)
         myPoints = np.array([self.rect.topleft, self.rect.topright, self.rect.bottomleft, self.rect.bottomright])
@@ -48,8 +52,11 @@ class Player(pygame.sprite.Sprite):
         rect_width = 6 * font_size
         rect_height = 15
         pygame.draw.rect(self.screen, (255,255,255), pygame.Rect(self.rect.topright[0], self.rect.topright[1], rect_width, rect_height))
-        self.screen.blit(multiLineSurface(message[0:6] + "..", pygame.font.SysFont('Arial', font_size), pygame.Rect(self.rect.topright[0], self.rect.topright[1], rect_width, rect_height), (0,0,0), (255,255,255)), (self.rect.topright[0]+2, self.rect.topright[1]))
+        self.screen.blit(multiLineSurface(message[0:7] + "..", pygame.font.SysFont('Arial', font_size), pygame.Rect(self.rect.topright[0], self.rect.topright[1], rect_width, rect_height), (0,0,0), (255,255,255)), (self.rect.topright[0]+2, self.rect.topright[1]))
 
+        if self.isPlayer:
+            sc = ServerCommunicator("192.168.86.30", "8088", "/chatbot/echo")
+            message = sc.send_recv_server(message)["text"]
         # NOW I NEED TO SEND THIS TO THE SERVER
         # RETURN THE RESPONSE AND DISPLAY IT FOR THE CHARACTER
         return message
