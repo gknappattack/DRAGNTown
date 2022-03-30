@@ -5,6 +5,8 @@ from helpers.sprite_sheet import sprite_sheet
 from helpers.texttools import multiLineSurface
 WIDTH = 760
 HEIGHT = 640
+DRAGN_SERVER_IP = "127.0.1.1"
+DRAGN_SERVER_PORT = "80"
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, appearance, isPlayer, customPos, screen, cPx=0, cPy=0):
@@ -55,7 +57,7 @@ class Player(pygame.sprite.Sprite):
         self.screen.blit(multiLineSurface(message[0:7] + "..", pygame.font.SysFont('Arial', font_size), pygame.Rect(self.rect.topright[0], self.rect.topright[1], rect_width, rect_height), (0,0,0), (255,255,255)), (self.rect.topright[0]+2, self.rect.topright[1]))
 
         if self.isPlayer:
-            sc = ServerCommunicator("192.168.86.30", "8088", "/chatbot/echo")
+            sc = ServerCommunicator(DRAGN_SERVER_IP, DRAGN_SERVER_PORT, "/chatbot/echo")
             message = sc.send_recv_server(message)["text"]
         # NOW I NEED TO SEND THIS TO THE SERVER
         # RETURN THE RESPONSE AND DISPLAY IT FOR THE CHARACTER
