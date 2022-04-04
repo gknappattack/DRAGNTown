@@ -9,7 +9,7 @@ DRAGN_SERVER_IP = "127.0.0.1"
 DRAGN_SERVER_PORT = "8088"
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, appearance, isPlayer, customPos, screen, cPx=0, cPy=0):
+    def __init__(self, appearance, isPlayer, customPos, screen, cPx=0, cPy=0, chatbot_address="/chatbot/echo"):
         pygame.sprite.Sprite.__init__(self)
         self.screen = screen
         self.isPlayer = isPlayer
@@ -24,6 +24,7 @@ class Player(pygame.sprite.Sprite):
         # 3 walk left
         # 4 walk right
         # 5 stand right
+        self.chatbot_address = chatbot_address
 
         self.rect = self.image.get_rect()
         if customPos:
@@ -57,10 +58,7 @@ class Player(pygame.sprite.Sprite):
         self.screen.blit(multiLineSurface(message[0:7] + "..", pygame.font.SysFont('Arial', font_size), pygame.Rect(self.rect.topright[0], self.rect.topright[1], rect_width, rect_height), (0,0,0), (255,255,255)), (self.rect.topright[0]+2, self.rect.topright[1]))
 
         if self.isPlayer:
-            sc = ServerCommunicator(DRAGN_SERVER_IP, DRAGN_SERVER_PORT, "/chatbot/trevor")
-
-
-
+            sc = ServerCommunicator(DRAGN_SERVER_IP, DRAGN_SERVER_PORT, self.chatbot_address)
             message = sc.send_recv_server(message)["text"]
         # NOW I NEED TO SEND THIS TO THE SERVER
         # RETURN THE RESPONSE AND DISPLAY IT FOR THE CHARACTER

@@ -49,7 +49,7 @@ class Game:
         villiager1 = Player(CharacterAssetHolder().getSprite(50), False, True, self.screen, cPx=200, cPy=400)
         villiager2 = Player(CharacterAssetHolder().getSprite(23), False, True, self.screen, 232, 400)
         villiager3 = Player(CharacterAssetHolder().getSprite(35), False, True, self.screen, 264, 400)
-        villiager4 = Player(CharacterAssetHolder().getSprite(46), False, True, self.screen, 296, 400)
+        villiager4 = Player(CharacterAssetHolder().getSprite(46), False, True, self.screen, 296, 400, chatbot_address='/chatbot/trevor')
 
         self.all_sprites.add(player)
         self.all_sprites.add(villiager1)
@@ -286,6 +286,7 @@ class Game:
                             self.text_box.updateText(self.input_box.text)
                             self.displayChatTxt = self.input_box.text
                             self.input_box.text = ""
+                            self.all_sprites.sprites()[0].chatbot_address = self.all_sprites.sprites()[self.talking_character_pos].chatbot_address
                             return_message = self.all_sprites.sprites()[0].talk(self.displayChatTxt)
                             self.all_sprites.sprites()[self.talking_character_pos].talk("{}->Plr: ".format(self.talking_character_pos) + return_message[7:])
                             self.text_box.updateText("{}->Plr: ".format(self.talking_character_pos) + return_message[7:])
