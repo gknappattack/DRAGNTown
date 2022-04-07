@@ -5,7 +5,10 @@ from helpers.sprite_sheet import sprite_sheet
 from helpers.texttools import multiLineSurface
 WIDTH = 760
 HEIGHT = 640
-DRAGN_SERVER_IP = "127.0.0.1"
+#DRAGN_SERVER_IP = "127.0.0.1"
+#DRAGN_SERVER_PORT = "8088"
+
+DRAGN_SERVER_IP = "192.168.86.65"
 DRAGN_SERVER_PORT = "8088"
 
 class Player(pygame.sprite.Sprite):

@@ -50,12 +50,15 @@ class Game:
         villiager2 = Player(CharacterAssetHolder().getSprite(23), False, True, self.screen, 232, 400)
         villiager3 = Player(CharacterAssetHolder().getSprite(35), False, True, self.screen, 264, 400)
         villiager4 = Player(CharacterAssetHolder().getSprite(46), False, True, self.screen, 296, 400, chatbot_address='/chatbot/trevor')
+        villiager5 = Player(CharacterAssetHolder().getSprite(99), False, True, self.screen, 328, 400, chatbot_address='/chatbot/kevin')
 
         self.all_sprites.add(player)
         self.all_sprites.add(villiager1)
         self.all_sprites.add(villiager2)
         self.all_sprites.add(villiager3)
         self.all_sprites.add(villiager4)
+        self.all_sprites.add(villiager5)
+
 
         # ------------ CHAT FUNCTIONALITY ----------------
         self.text_box = TextBox(self.screen, 125,760, (0,480))
