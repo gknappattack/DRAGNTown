@@ -19,7 +19,9 @@ file3 = './Assets/Pixel Art Top Down - Basic/Texture/TX Tileset Wall.png'
 # Version = '2.0'
 
 
+
 class Game:
+    text = "Test if gitpush works"
     #W = 960 # normally 640
     #H = 840 # normally 240
     SIZE = WIDTH, HEIGHT
